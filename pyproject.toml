@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "smlq"
+version = "0.1.0"
+description = ""
+authors = ["mbw <matthew@mh-white.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+dbt-duckdb = "^1.5.2"
+fastapi = {extras = ["all"], version = "^0.100.0"}
+loguru = "^0.7.0"
+numpy = "^1.25.1"
+jsonpickle = "^3.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
