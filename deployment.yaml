@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcd-sharding
+spec:
+  selector:
+    matchLabels:
+      app: mcd-sharding
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mcd-sharding
+    spec:
+      imagePullSecrets:
+        - name: prod-all-icr-io
+      containers:
+        - image: smlq-mcd-sharder
+          name: mcd-sharding          
+          # Just spin & wait forever - useful if needed for debug
+          # command: ["sleep"]
+          # args: ["infinity"]          
+          env:
+            - name: DB_PATH
+              value: /data/_codeproject
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: codenet-archive
+              mountPath: /data/_codeproject/
+            # - name: env-config-volume
+            #   mountPath: /data/env
+            # - mountPath: /mnt/s3fs
+            #   name:  bluepile-cos-volume
+            # - mountPath: /mnt/codedatasets
+            #   name: codedatasets-cos-volume
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "1"
+            limits:
+              memory: "6Gi"
+              cpu: "2"            
+      volumes:
+        - name: codenet-archive
+          persistentVolumeClaim:
+            claimName: sharding-pvc
+        # - name: env-config-volume
+        #   configMap:
+        #     name: env-conf
+        # - name: bluepile-cos-volume
+        #   persistentVolumeClaim:
+        #     claimName: bluepile-cos-pvc
+        #     readOnly: true
+        # - name: codedatasets-cos-volume
+        #   persistentVolumeClaim:
+        #     claimName: codedatasets-pvc
+---        
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcd-sharding-svc
+spec:
+  selector:
+    app: mcd-sharding
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 8000      
+

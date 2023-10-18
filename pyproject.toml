@@ -12,6 +12,7 @@ fastapi = {extras = ["all"], version = "^0.100.0"}
 loguru = "^0.7.0"
 numpy = "^1.25.1"
 jsonpickle = "^3.0.1"
+pydantic-settings = "^2.0.3"
 
 
 [build-system]
