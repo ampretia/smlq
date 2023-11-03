@@ -92,9 +92,9 @@ async def reload(qid):
 @app.get("/reset/{qid}")
 async def reset(qid):
     try:
-        con.execute(f"DELETE FROM tasks WHERE queuename='{qid}';")
+        con.execute(f"DELETE FROM tasks WHERE queue_name='{qid}';")
         q[qid] = Queue()
-
+        return True
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail="??")
@@ -137,40 +137,43 @@ async def complete(uid: str, comp: Completion):
 async def root():
     global con
     d = {
-        "queueszies": {
-            "default": q["default"].qsize(),
-        },
-        "db": {
-            "default": {"total": 0, "assigned": 0, "completed": 0},
+        "queues": {
+            
         },
     }
 
     results = con.execute(
-        " select count(*),queuename from tasks group by queuename;"
+        " select count(*),queue_name from tasks group by queue_name;"
     ).fetchall()
-    for r in results:
-        print(r)
+    for r in results:        
         size = r[0]
         qn = r[1]
-        d["db"][qn]["total"] = size
+        if qn not in d["queues"]:
+            d["queues"][qn] = {}
+        d["queues"][qn]["total"] = size
 
     results = con.execute(
-        " select count(*),queuename from tasks where completed is NULL and assigned is not NULL group by queuename ;"
+        " select count(*),queue_name from tasks where completed is NULL and assigned is not NULL group by queue_name ;"
     ).fetchall()
     for r in results:
-        print(r)
+        
         size = r[0]
         qn = r[1]
-        d["db"][qn]["assigned"] = size
+        if qn not in d["queues"]:
+            d["queues"][qn] = {}
+
+        d["queues"][qn]["assigned"] = size
 
     results = con.execute(
-        " select count(*),queuename from tasks where completed is not NULL and assigned is not NULL group by queuename ;"
+        " select count(*),queue_name from tasks where completed is not NULL and assigned is not NULL group by queue_name ;"
     ).fetchall()
     for r in results:
         print(r)
         size = r[0]
         qn = r[1]
-        d["db"][qn]["completed"] = size
+        if qn not in d["queues"]:
+            d["queues"][qn] = {}
+        d["queues"][qn]["completed"] = size
 
     print(d)
 
