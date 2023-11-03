@@ -12,7 +12,7 @@ _default:
 
 start:
     #!/bin/bash
-    DB_PATH={{CWDIR}}/smlq uvicorn smlq.main:app --host 0.0.0.0
+    DB_PATH={{CWDIR}}/smlq uvicorn smlq.main:app --host 0.0.0.0 --port 3000
 
 k8s:
     #!/bin/bash
@@ -23,7 +23,7 @@ k8s:
 
 docker:
     #!/bin/bash
-    TAG=smlq-sharder    
+    TAG=smlq    
     IMAGE=${TAG}:latest
     
     docker build -t ${TAG} .
