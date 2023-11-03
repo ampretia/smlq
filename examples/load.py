@@ -20,7 +20,8 @@ args = parser.parse_args()
 f = open(args.datafile, "r")
 lines = f.readlines()
 
-url = f"http://localhost:8000/queue/{args.queue}"
+
+url = f"http://localhost:3000/queue/{args.queue}"
 
 for line in lines:
     data = {"uid":"", "payload": line}

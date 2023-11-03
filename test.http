@@ -1,17 +1,41 @@
-GET https://localhost:3000/add/default HTTP/1.1
+###
+# Gets messages from the 'input' queue
+
+GET http://localhost:3000/queue/input HTTP/1.1
+
+###
+# Reloads  messages from the 'input' queue - i.e. eveything
+# not compelted (same as if restarted the process)
+
+PATCH http://localhost:3000/queue/input HTTP/1.1
+
 
 ###
 
-GET http://localhost:8000/ HTTP/1.1
+# clears the 'input' queue
+GET http://localhost:3000/reset/input HTTP/1.1
+
+
+###
+# Mark as complete
+
+POST http://localhost:3000/task/491d416e-7a42-11ee-990f-00155d104f68 HTTP/1:1
+
+{
+    "code":"200",
+    "detail":"all done"
+}
 
 ###
 
-POST http://localhost:8000/queue/default HTTP/1.1
+# Sends new message to the 'input' queue
+
+POST http://localhost:3000/queue/input HTTP/1.1
 content-type: application/json
 
 { 
-    "id":"",
-    "data":"42"
+    "uid":"",
+    "payload":"42"
 }
 
 

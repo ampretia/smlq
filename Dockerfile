@@ -25,6 +25,8 @@ RUN  apt-get update \
 WORKDIR /app
 RUN chmod -R g+rwx /app
 
+RUN mkdir -p /opt/smlq/data && chmod -R g+rwx /opt/smlq/data
+
 ENV HOME=/app
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
@@ -33,4 +35,4 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY smlq /app/smlq
 
-CMD ["uvicorn", "smlq.main:app", "--host", "0.0.0.0"]
+CMD ["uvicorn", "smlq.main:app", "--host", "0.0.0.0","--port","3000"]

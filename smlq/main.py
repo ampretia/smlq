@@ -7,12 +7,27 @@ from datetime import datetime
 from loguru import logger
 from .config import settings
 
+logger.info("""
+                   __     
+   _________ ___  / /___ _
+  / ___/ __ `__ \/ / __ `/
+ (__  ) / / / / / / /_/ / 
+/____/_/ /_/ /_/_/\__, /  
+                    /_/               
+            """)
 
+logger.info("Using configuration:")
+logger.info(settings)
+
+# create FASTAPI instance
 app = FastAPI()
 
+# in memory set of queues
 q = {}
-q["default"] = Queue()
+
+# duckdb connection
 con = None
+
 
 # data model
 class Item(BaseModel):
@@ -25,13 +40,14 @@ class Completion(BaseModel):
     detail: str
 
 
+# Add something to a queue
 @app.post("/queue/{qid}")
 async def add(qid, data: Item):
     global con
     # print(f"qid {qid}, data {data}")
     if qid not in q:
         raise HTTPException(
-            status_code=404, detail="Queue not known - call reset first"
+            status_code=404, detail="Queue not known"
         )
 
     try:
@@ -49,6 +65,29 @@ async def add(qid, data: Item):
 
     return data.uid
 
+@app.patch("/queue/{qid}")
+async def reload(qid):
+    global con
+
+    if qid not in q:
+        raise HTTPException(
+            status_code=404, detail="Queue not known"
+        )
+
+    try:
+        results = con.execute(f"select * from tasks where completed is NULL and queue_name='{qid}';").fetchall()
+        q[qid] = Queue()
+        logger.info(f"Reloading queue {qid} with tasks not completed {len(results)}")
+        for r in results:
+            item = Item(uid=r[0], payload=r[7])          
+            q[qid].put(item)
+
+        return len(results)
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="??")
+
+    
 
 @app.get("/reset/{qid}")
 async def reset(qid):
@@ -137,15 +176,20 @@ async def root():
 
     return d
 
+## main code - todo: lookup how fast api manages it's main entry point
+# create the default queues
+for dq in settings.default_queues:
+    logger.info(f"Setting up {dq}")
+    q[dq] = Queue()
 
 # create a connection to a file
 con = duckdb.connect(f"{settings.database_path}/{settings.database_file_name}")
-
 con.execute(
     "CREATE TABLE IF NOT EXISTS tasks (uid TEXT NOT NULL, queue_name TEXT NOT NULL, retries SMALLINT, added TIMESTAMP,	assigned TIMESTAMP,	completed TIMESTAMP,	status TEXT, data TEXT, 	PRIMARY KEY (uid));"
 )
 
 # preload the queue
+# this may result in additional queues being created
 results = con.execute("select * from tasks where completed is NULL;").fetchall()
 for r in results:
     item = Item(uid=r[0], payload=r[7])

@@ -7,4 +7,34 @@ Consumers would have the ability to mark jobs as complete; should a consumer cra
 Access to the queue is via REST
 
 
+## Examples
 
+- [`load.py`](./examples/load.py) reads simple text file and puts each line to a queue
+
+- [`get.py`](./examples/get.py) gets until nothing available
+
+- [`getcomplete.py`](./examples/getcomplete.py) gets and completes all tasks
+
+
+```
+python load.py --queue input --datafile datafile
+```
+
+## Running
+As docker container; default queues, db is not externally mapped.
+ 
+```
+docker run -it -p 3000:3000 smlq
+``` 
+
+As a docker container, default queues, mapping to db directory to local disk. Persists therefore past container restart
+
+```
+docker run -it -p 3000:3000 -v $(pwd):/opt/smlq/data smlq
+```
+
+
+As a docker contain, set of queues plus mappining db to local disk
+```
+docker run -it -p 3000:3000 -e default_queues='["input","output"]' -v $(pwd):/opt/smlq/data smlq
+```
